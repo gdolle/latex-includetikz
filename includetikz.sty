@@ -28,6 +28,7 @@
 %\tikzsetexternalprefix{work/}
 \tikzexternaldisable
 
+\makeatletter
 % Parameters
 \define@key{includetikz}{scale}{\tikzset{every picture/.style={scale=#1}}}
 \define@key{includetikz}{width}{\tikzset{every picture/.style={width=#1}}}
@@ -50,6 +51,8 @@
     \input{#2}
     \tikzexternaldisable
 }
+
+\makeatother
 
 \ProcessOptions\relax
 
