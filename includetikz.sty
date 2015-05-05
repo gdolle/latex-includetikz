@@ -1,0 +1,56 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Include tikz file.
+%
+% Author(s): Guillaume Dolle <gdolle at unistra.fr>
+% (c) GNU GPLv2 2015
+%
+% Package required: package calc
+% Options: scale, scalefnt
+% Package options: external
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\NeedsTeXFormat{LaTeX2e}[2015/05/01]
+\ProvidesPackage{includetikz}[2015/05/01 Smart tikz include package]
+\RequirePackage{ifthen}
+\RequirePackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{external}
+\RequirePacakge{scalefnt}
+\RequirePackage{xkeyval}
+
+% Enable external tikz (pdf) with checksum.
+\DeclareOption{external}{
+    \tikzexternalize
+    \tikzexternaldisable
+}
+
+%\tikzsetexternalprefix{work/}
+\tikzexternaldisable
+
+% Parameters
+\define@key{includetikz}{scale}{\tikzset{every picture/.style={scale=#1}}}
+\define@key{includetikz}{width}{\tikzset{every picture/.style={width=#1}}}
+\define@key{includetikz}{height}{\tikzset{every picture/.style={height=#1}}}
+\define@key{includetikz}{fill opacity}{\tikzset{every picture/.style={fill opacity=#1}}}
+\define@key{includetikz}{font style}{\tikzset{every picture/.style={font=#1}}}
+\define@key{includetikz}{font scale}{\scalefont{#1}}
+\define@key{includetikz}{drawscale}{
+    \pgfmathsetmacro{\fs}{2 - #1}
+    \scalefont{\fs}
+    \tikzset{every picture/.style={scale=#1}}
+}
+
+\newcommand\includetikz[2][]
+{
+    \filename@parse{#2}
+    \tikzexternalenable
+    \tikzsetnextfilename{\filename@base}
+    \setkeys{includetikz}{#1}
+    \input{#2}
+    \tikzexternaldisable
+}
+
+\ProcessOptions\relax
+
+% vim: set ft=tex tw=80 sw=2:
