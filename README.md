@@ -42,11 +42,17 @@ Option | Description
 
 Minimal example:
 ```
+% Preamble.
 \usepackage{includetizk}
+
+% Document.
 \includetikz[scale=0.9]{figs/monimage.tikz}
 ```
 Generate monimage.tikz during first compilation, then use auto-generated pdf:
 ```
+% Preamble.
 \usepackage[external]{includetizk}
+
+% Document.
 \includetikz[font scale=1.3]{figs/monimage.tikz}
 ```
