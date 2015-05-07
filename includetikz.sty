@@ -20,9 +20,15 @@
 \RequirePackage{xkeyval}
 
 % Enable external tikz (pdf) with checksum.
-\DeclareOption{external}{
-    \tikzexternalize
-    \tikzexternaldisable
+\DeclareOption{external}
+{
+  \tikzexternalize
+  \tikzexternaldisable
+}
+% Optimize
+\DeclareOption{optimize}
+{
+  \tikzset{external/optimize=true}
 }
 
 %\tikzsetexternalprefix{work/}
