@@ -52,6 +52,7 @@
 {
     \filename@parse{#2}
     \tikzexternalenable
+    \tikzsetexternalprefix{\filename@area}
     \tikzsetnextfilename{\filename@base}
     \setkeys{includetikz}{#1}
     \input{#2}
