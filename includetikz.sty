@@ -65,10 +65,6 @@
     \end{tikzpicture}
   }
   {
-    \newwrite\tempfile
-    \immediate\openout\tempfile=figs/toto
-    \immediate\closeout\tempfile
-
     \filename@parse{#2}
 
     % Create a counter for renaming.
@@ -85,31 +81,69 @@
 
     \bgroup
 
-    % Set PDF path and filename.
+    % Vars.
     \def\pdffilename{\filename@base-\jobname-n\arabic{\filename@base}}
-    \def\pdfoptmdfivefilename{\pdffilename-opts.md5}
 
+    % Set tikz external path and filename.
     \tikzsetexternalprefix{\filename@area}
     \tikzsetnextfilename{\pdffilename}
 
     % Set figure options.
     \setkeys{includetikz}{#1}
 
-    % Create MD5 for includetikz options
-    % Note: Required to take into account options in the mdf5sum.
-    \newwrite\tempfile
-    \immediate\openout\tempfile=\filename@area\pdfoptmdfivefilename
-    \message{OPTS: #1}
-    \message{MD5SUM: \pdf@mdfivesum{#1}}
-    \immediate\write\tempfile{md5sum:\pdf@mdfivesum{#1}}
-    \immediate\closeout\tempfile
-    % TODO if fileexist read it and compare current checksum, if different force
-    % recompile
+    % Force rebuild if includetikz option change.
+    % We need to create a new MD5 for includetikz options as it is not taken
+    % into account by tikz external.
+
+    % Vars
+    \def\pdfoptsmdfivefilename{\pdffilename-opts.md5}
+    \def\pdfoptsmdfivefullpath{\filename@area\pdfoptsmdfivefilename}
+    \def\pdfoptsmdfivesum{\pdf@mdfivesum{#1}}
+    \newboolean{tikzrebuild}
+    \setboolean{tikzrebuild}{false}
+
+    % Function to write MD5 file
+    \def\storemdfive
+    {
+      \newwrite\tempfile
+      \immediate\openout\tempfile=\pdfoptsmdfivefullpath
+      \immediate\write\tempfile{\@backslashchar newcommand \@backslashchar includetikzoptslastkey{\pdfoptsmdfivesum}\@percentchar}
+      \immediate\closeout\tempfile
+      \immediate\closein\tempfile
+    }
+
+    % Check md5file and force rebuild.
+    \IfFileExists{\pdfoptsmdfivefullpath}
+    {% MD5 file exist.
+      \input{\pdfoptsmdfivefullpath} % load md5 opts
+      \message{old:\includetikzoptslastkey, opt:#1}
+      \message{new:\pdfoptsmdfivesum}
+      \ifnum\pdfstrcmp{\includetikzoptslastkey}{\pdfoptsmdfivesum}=0
+        % Same MD5.
+        \message{SAME MD5}
+      \else
+      % Different MD5, force rebuild tikz.
+        \message{NOT SAME MD5}
+        \setboolean{tikzrebuild}{true}
+        \storemdfive
+      \fi
+      \ifthenelse{\boolean{tikzrebuild}} %use this -> ifnum tikzset bug??
+      {
+        \tikzset{external/force remake=true}
+      }
+      {}
+    }
+    {
+      % MD5 file does not exist.
+      \storemdfive
+    }
 
     \tikzexternalenable
     % Set path and auto-generated figure name.
     \input{#2}
     \tikzexternaldisable
+
+    \tikzset{external/force remake=false}
     \egroup
   }
 }
