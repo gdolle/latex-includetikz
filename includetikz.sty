@@ -16,7 +16,7 @@
 \RequirePackage{tikz}
 \usetikzlibrary{calc}
 \usetikzlibrary{external}
-%\RequirePacakge{scalefnt}
+\RequirePackage{scalefnt}
 \RequirePackage{xkeyval}
 
 % Enable external tikz (pdf) with checksum.
@@ -48,15 +48,75 @@
     \tikzset{every picture/.style={scale=#1}}
 }
 
+\newboolean{noincludetikz}
+\setboolean{noincludetikz}{false}
+
 \newcommand\includetikz[2][]
 {
+  \ifthenelse{\boolean{noincludetikz}}
+  {
+    % Add default image
+    \begin{tikzpicture}
+      \draw[fill=black] (-3.5,2.5) rectangle (3.5,-2);
+      \node[color=white] at (0,0.5){\large FIGURE DISABLED !};
+      \node[color=white] at (0,0){\tiny\textit{(remove
+          \textbackslash{}includetikzdisable} to
+           reactivate this figure)};
+    \end{tikzpicture}
+  }
+  {
+    \newwrite\tempfile
+    \immediate\openout\tempfile=figs/toto
+    \immediate\closeout\tempfile
+
     \filename@parse{#2}
-    \tikzexternalenable
+
+    % Create a counter for renaming.
+    % Note that tikz external might provide this value...
+    \ifcsname c@\filename@base\endcsname
+      % Counter defined.
+      \stepcounter{\filename@base}
+      \message{\arabic{\filename@base}}
+    \else
+      % counter not defined.
+      \newcounter{\filename@base}
+      \message{\arabic{\filename@base}}
+    \fi
+
+    \bgroup
+
+    % Set PDF path and filename.
+    \def\pdffilename{\filename@base-\jobname-n\arabic{\filename@base}}
+    \def\pdfoptmdfivefilename{\pdffilename-opts.md5}
+
     \tikzsetexternalprefix{\filename@area}
-    \tikzsetnextfilename{\filename@base}
+    \tikzsetnextfilename{\pdffilename}
+
+    % Set figure options.
     \setkeys{includetikz}{#1}
+
+    % Create MD5 for includetikz options
+    % Note: Required to take into account options in the mdf5sum.
+    \newwrite\tempfile
+    \immediate\openout\tempfile=\filename@area\pdfoptmdfivefilename
+    \message{OPTS: #1}
+    \message{MD5SUM: \pdf@mdfivesum{#1}}
+    \immediate\write\tempfile{md5sum:\pdf@mdfivesum{#1}}
+    \immediate\closeout\tempfile
+    % TODO if fileexist read it and compare current checksum, if different force
+    % recompile
+
+    \tikzexternalenable
+    % Set path and auto-generated figure name.
     \input{#2}
     \tikzexternaldisable
+    \egroup
+  }
+}
+
+\newcommand\includetikzdisable
+{
+  \setboolean{noincludetikz}{true}
 }
 
 \makeatother

@@ -38,6 +38,12 @@ Option | Description
 [font style] | tikz image font style
 ------
 
+##### Commands:
+
+Command | Description
+--- | ---
+\includetikzdisable | Disable all pictures (to make compilation faster)
+
 ##### Examples:
 
 Minimal example:
@@ -55,4 +61,13 @@ Generate monimage.tikz during first compilation, then use auto-generated pdf:
 
 % Document.
 \includetikz[font scale=1.3]{figs/monimage.tikz}
-```
+`
+
+##### FAQS
+
+*I get an MD5 write error `I can't write on file `figs/.md5'.*
+
+This often happens when you output files in another directory using the
+latex option `-output-directory=<workdir>`.
+The easier solution is to create a simlink inside the working directory.
+See the providen example.
