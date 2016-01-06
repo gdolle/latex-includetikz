@@ -18,6 +18,8 @@
 \usetikzlibrary{external}
 \RequirePackage{scalefnt}
 \RequirePackage{xkeyval}
+\RequirePackage{ifluatex}
+\RequirePackage{xstring}
 
 % Enable external tikz (pdf) with checksum.
 \DeclareOption{external}
@@ -37,6 +39,7 @@
 \makeatletter
 % Parameters
 \define@key{includetikz}{scale}{\tikzset{every picture/.style={scale=#1}}}
+\define@key{includetikz}{keepratio}[1]{\tikzset{every node/.style={transform shape}}}
 \define@key{includetikz}{width}{\tikzset{every picture/.style={width=#1}}}
 \define@key{includetikz}{height}{\tikzset{every picture/.style={height=#1}}}
 \define@key{includetikz}{fill opacity}{\tikzset{every picture/.style={fill opacity=#1}}}
@@ -65,24 +68,22 @@
     \end{tikzpicture}
   }
   {
+    \bgroup
     \filename@parse{#2}
 
     % Create a counter for renaming.
     % Note that tikz external might provide this value...
-    \ifcsname c@\filename@base\endcsname
+    \def\countername{it\filename@base}
+    \ifcsname c@\countername \endcsname
       % Counter defined.
-      \stepcounter{\filename@base}
-      \message{\arabic{\filename@base}}
+      \stepcounter{\countername}
     \else
       % counter not defined.
-      \newcounter{\filename@base}
-      \message{\arabic{\filename@base}}
+      \newcounter{\countername}
     \fi
 
-    \bgroup
-
     % Vars.
-    \def\pdffilename{\filename@base-\jobname-n\arabic{\filename@base}}
+    \def\pdffilename{\filename@base-\jobname-n\arabic{\countername}}
 
     % Set tikz external path and filename.
     \tikzsetexternalprefix{\filename@area}
@@ -98,18 +99,39 @@
     % Vars
     \def\pdfoptsmdfivefilename{\pdffilename-opts.md5}
     \def\pdfoptsmdfivefullpath{\filename@area\pdfoptsmdfivefilename}
-    \def\pdfoptsmdfivesum{\pdf@mdfivesum{#1}}
+    \newcommand\pdfoptsmdfivesum{\pdf@mdfivesum{#1}}
     \newboolean{tikzrebuild}
     \setboolean{tikzrebuild}{false}
 
+    \immediate\message{-----------------^^J}
+    \immediate\message{Processing image \pdffilename ^^J}
+    \immediate\message{Processing md5 opts \pdfoptsmdfivefilename ^^J}
+
     % Function to write MD5 file
-    \def\storemdfive
+    \newcommand\storemdfive
     {
-      \newwrite\tempfile
-      \immediate\openout\tempfile=\pdfoptsmdfivefullpath
-      \immediate\write\tempfile{\@backslashchar newcommand \@backslashchar includetikzoptslastkey{\pdfoptsmdfivesum}\@percentchar}
-      \immediate\closeout\tempfile
-      \immediate\closein\tempfile
+      \ifluatex
+        \directlua{
+          out = io.open('\pdfoptsmdfivefullpath','w')
+          out:write('\string\\def\string\\includetikzoptslastkey{\pdfoptsmdfivesum}')
+          io.close(out)
+        }
+      \else
+        \newwrite\tempfile
+        \immediate\openout\tempfile=\pdfoptsmdfivefullpath
+        \immediate\write\tempfile{\@backslashchar def \@backslashchar includetikzoptslastkey{\pdfoptsmdfivesum}\@percentchar}
+        \immediate\closeout\tempfile
+
+% TODO Bug here to fix! It seems that options are modified for different
+% pictures simultaneously, only the first picture is rebuild, because the MD5 cache is overwritten
+% too early! (first mddivewrite call, that is unexpected => newwrite bug?)
+
+%        \expandafter\newwrite\csname \countername\the\value{\countername}@\endcsname
+%        \immediate\openout\csname \countername\the\value{\countername}@\endcsname=\pdfoptsmdfivefullpath
+%        \immediate\write\csname \countername\the\value{\countername}@\endcsname{\@backslashchar def \@backslashchar includetikzoptslastkey{\pdfoptsmdfivesum}\@percentchar}
+%        \immediate\closeout\csname \countername\the\value{\countername}@\endcsname
+%        \immediate\write18{read}
+      \fi
     }
 
     % Check md5file and force rebuild.
@@ -117,12 +139,12 @@
     {% MD5 file exist.
       \input{\pdfoptsmdfivefullpath} % load md5 opts
       \message{old:\includetikzoptslastkey, opt:#1}
-      \message{new:\pdfoptsmdfivesum}
-      \ifnum\pdfstrcmp{\includetikzoptslastkey}{\pdfoptsmdfivesum}=0
+      \message{new:\pdfoptsmdfivesum ^^J}
+      \ifnum\pdf@strcmp{\includetikzoptslastkey}{\pdfoptsmdfivesum}=0
         % Same MD5.
         \message{SAME MD5}
       \else
-      % Different MD5, force rebuild tikz.
+        % Different MD5, force rebuild tikz.
         \message{NOT SAME MD5}
         \setboolean{tikzrebuild}{true}
         \storemdfive
@@ -142,7 +164,6 @@
     % Set path and auto-generated figure name.
     \input{#2}
     \tikzexternaldisable
-
     \tikzset{external/force remake=false}
     \egroup
   }

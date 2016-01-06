@@ -1,9 +1,7 @@
-all: syml
-	pdflatex --output-directory=work -shell-escape test1.tex
-	pdflatex --output-directory=work -shell-escape test2.tex
+all: 1 2
 
 1: syml
-	pdflatex --output-directory=work -shell-escape test1.tex
+	lualatex --output-directory=work -shell-escape test1.tex
 
 2: syml
 	pdflatex --output-directory=work -shell-escape test2.tex
@@ -12,7 +10,8 @@ dir:
 	@mkdir -p work
 
 syml: dir
-	@ln -sf ../figs work/figs
+	@cd work; \
+	ln -sf ../figs .
 
 clean:
 	@rm -rf ./work

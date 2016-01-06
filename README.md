@@ -1,7 +1,6 @@
 # latex-includetikz
 Latex package to include external tikz figures and similarly to \includegraphics command.
 
-
 # Install
 
 Add `includetikz` in your current directory, or texmf install. 
@@ -30,12 +29,13 @@ NB: .tikz or .tex extension work.
 ##### Options
 
 ------
-Option | Description
---- | ---
-[scale] | Scale the tikz image
-[draw scale] | Scale the image and inverse scale font size
-[font scale] |  Scale tikz image font
-[font style] | tikz image font style
+Option         | valuetype | Description
+---            | ---       | ---
+[scale]        | float     | Scale the tikz image
+[keepratio]    | X         | Scale the image and inverse scale font size
+[font scale]   | float     | Scale tikz image font
+[font style]   | string    | Tikz image font style (beta)
+[fill opacity] | float     | Modify image opacity (beta)
 ------
 
 ##### Commands:
@@ -61,7 +61,12 @@ Generate monimage.tikz during first compilation, then use auto-generated pdf:
 
 % Document.
 \includetikz[font scale=1.3]{figs/monimage.tikz}
-`
+```
+
+##### Known bug/issues
+
+- Refresh bug: Fail to regenerate files when options are changed on several
+figures (Unresolved).
 
 ##### FAQS
 
