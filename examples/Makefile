@@ -11,7 +11,8 @@ dir:
 
 syml: dir
 	@cd work; \
-	ln -sf ../figs .
+	ln -sf ../figs .;\
+	ln -sf ../autogen .;
 
 clean:
 	@rm -rf ./work
@@ -20,3 +21,5 @@ clean:
 	@rm -rf ./figs/*.dep
 	@rm -rf ./figs/*.md5
 	@rm -rf ./figs/*.pdf
+	@rm -rf ./autogen
+	@rm -rf ./figs/autogen

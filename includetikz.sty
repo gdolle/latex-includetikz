@@ -33,6 +33,11 @@
   \tikzset{external/optimize=true}
 }
 
+\DeclareOption{origin}
+{
+  \setboolean{includetikzorigin}{true}
+}
+
 %\tikzsetexternalprefix{work/}
 \tikzexternaldisable
 
@@ -51,12 +56,14 @@
     \tikzset{every picture/.style={scale=#1}}
 }
 
-\newboolean{noincludetikz}
-\setboolean{noincludetikz}{false}
+\newboolean{includetikzdisable}
+\newboolean{includetikzorigin}
+\setboolean{includetikzdisable}{false}
+\setboolean{includetikzorigin}{false}
 
 \newcommand\includetikz[2][]
 {
-  \ifthenelse{\boolean{noincludetikz}}
+  \ifthenelse{\boolean{includetikzdisable}}
   {
     % Add default image
     \begin{tikzpicture}
@@ -84,9 +91,14 @@
 
     % Vars.
     \def\pdffilename{\filename@base-\jobname-n\arabic{\countername}}
+    \ifthenelse{\boolean{includetikzorigin}}
+      {\def\pdffilepath{\filename@area/autogen/}}
+      {\def\pdffilepath{./autogen/}}
+
+    \immediate\write18{mkdir -p \pdffilepath}
 
     % Set tikz external path and filename.
-    \tikzsetexternalprefix{\filename@area}
+    \tikzsetexternalprefix{\pdffilepath}
     \tikzsetnextfilename{\pdffilename}
 
     % Set figure options.
@@ -98,7 +110,7 @@
 
     % Vars
     \def\pdfoptsmdfivefilename{\pdffilename-opts.md5}
-    \def\pdfoptsmdfivefullpath{\filename@area\pdfoptsmdfivefilename}
+    \def\pdfoptsmdfivefullpath{\pdffilepath/\pdfoptsmdfivefilename}
     \newcommand\pdfoptsmdfivesum{\pdf@mdfivesum{#1}}
     \newboolean{tikzrebuild}
     \setboolean{tikzrebuild}{false}
@@ -171,7 +183,12 @@
 
 \newcommand\includetikzdisable
 {
-  \setboolean{noincludetikz}{true}
+  \setboolean{includetikzdisable}{true}
+}
+
+\newcommand\includetikzorigin
+{
+  \setboolean{includetikzorigin}{true}
 }
 
 \makeatother
