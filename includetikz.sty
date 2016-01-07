@@ -20,26 +20,40 @@
 \RequirePackage{xkeyval}
 \RequirePackage{ifluatex}
 \RequirePackage{xstring}
+\RequirePackage{etoolbox}
 
+\tikzexternaldisable
+
+\newtoggle{itOrigin} \togglefalse{itOrigin}
+\newtoggle{itDisable} \togglefalse{itDisable}
+\newtoggle{itRebuild} \togglefalse{itRebuild}
+
+%===============================================================================
 % Enable external tikz (pdf) with checksum.
 \DeclareOption{external}
 {
   \tikzexternalize
   \tikzexternaldisable
 }
+
+%===============================================================================
 % Optimize
-\DeclareOption{optimize}
+\DeclareOption{itOptimize}
 {
   \tikzset{external/optimize=true}
 }
 
+%===============================================================================
 \DeclareOption{origin}
 {
-  \setboolean{includetikzorigin}{true}
+  \toggletrue{itOrigin}
 }
 
-%\tikzsetexternalprefix{work/}
-\tikzexternaldisable
+%===============================================================================
+\DeclareOption{disable}
+{
+  \toggletrue{itDisable}
+}
 
 \makeatletter
 % Parameters
@@ -56,15 +70,29 @@
     \tikzset{every picture/.style={scale=#1}}
 }
 
-\newboolean{includetikzdisable}
-\newboolean{includetikzorigin}
-\setboolean{includetikzdisable}{false}
-\setboolean{includetikzorigin}{false}
-
-\newcommand\includetikz[2][]
+%-------------------------------------------------------------------------------
+\def\it@figCounterName
 {
-  \ifthenelse{\boolean{includetikzdisable}}
-  {
+  it\filename@base
+}
+
+%-------------------------------------------------------------------------------
+\def\it@stepFigCounter
+{
+  % Create a counter for renaming.
+  % Note that tikz external might provide this value...
+  \ifcsname c@\it@figCounterName \endcsname
+  % Counter defined.
+    \stepcounter{\it@figCounterName}
+  \else
+    % counter not defined.
+    \newcounter{\it@figCounterName}
+  \fi
+}
+
+%-------------------------------------------------------------------------------
+\def\it@defaultFigure
+{
     % Add default image
     \begin{tikzpicture}
       \draw[fill=black] (-3.5,2.5) rectangle (3.5,-2);
@@ -73,33 +101,59 @@
           \textbackslash{}includetikzdisable} to
            reactivate this figure)};
     \end{tikzpicture}
+}
+
+%-------------------------------------------------------------------------------
+%\newcommand\it@pdfFileName{}
+\def\it@pdfFileName{%
+  \filename@base-\jobname-n\arabic{\it@figCounterName}%
+}
+
+%-------------------------------------------------------------------------------
+% Checksum MD5
+\def\it@pdfPath%
+{%
+  \iftoggle{itOrigin}{\filename@area/autogen/}{./autogen/}%
+}
+
+%-------------------------------------------------------------------------------
+\def\it@optChecksumFileName
+{%
+%  \def\pdfoptsmdfivefilename{
+  \it@pdfFileName-opts.md5%
+}
+
+%-------------------------------------------------------------------------------
+\def\it@optChecksumPathToFileName
+{%
+  \it@pdfPath/\it@optChecksumFileName%
+}
+
+%-------------------------------------------------------------------------------
+\def\it@optCurrChecksum
+{%
+    \pdf@mdfivesum{##1}%
+}
+
+
+%-------------------------------------------------------------------------------
+\newcommand\includetikz[2][]
+{
+  \iftoggle{itDisable}
+  {
+    \it@defaultFigure
   }
   {
     \bgroup
     \filename@parse{#2}
 
-    % Create a counter for renaming.
-    % Note that tikz external might provide this value...
-    \def\countername{it\filename@base}
-    \ifcsname c@\countername \endcsname
-      % Counter defined.
-      \stepcounter{\countername}
-    \else
-      % counter not defined.
-      \newcounter{\countername}
-    \fi
+    \it@stepFigCounter
 
-    % Vars.
-    \def\pdffilename{\filename@base-\jobname-n\arabic{\countername}}
-    \ifthenelse{\boolean{includetikzorigin}}
-      {\def\pdffilepath{\filename@area/autogen/}}
-      {\def\pdffilepath{./autogen/}}
-
-    \immediate\write18{mkdir -p \pdffilepath}
+    \immediate\write18{mkdir -p \it@pdfPath}
 
     % Set tikz external path and filename.
-    \tikzsetexternalprefix{\pdffilepath}
-    \tikzsetnextfilename{\pdffilename}
+    \tikzsetexternalprefix{\it@pdfPath}
+    \tikzsetnextfilename{\it@pdfFileName}
 
     % Set figure options.
     \setkeys{includetikz}{#1}
@@ -109,29 +163,23 @@
     % into account by tikz external.
 
     % Vars
-    \def\pdfoptsmdfivefilename{\pdffilename-opts.md5}
-    \def\pdfoptsmdfivefullpath{\pdffilepath/\pdfoptsmdfivefilename}
-    \newcommand\pdfoptsmdfivesum{\pdf@mdfivesum{#1}}
-    \newboolean{tikzrebuild}
-    \setboolean{tikzrebuild}{false}
-
     \immediate\message{-----------------^^J}
-    \immediate\message{Processing image \pdffilename ^^J}
-    \immediate\message{Processing md5 opts \pdfoptsmdfivefilename ^^J}
+    \immediate\message{Processing image \it@pdfFileName ^^J}
+    \immediate\message{Processing md5 opts \it@optChecksumFileName ^^J}
 
     % Function to write MD5 file
     \newcommand\storemdfive
     {
       \ifluatex
         \directlua{
-          out = io.open('\pdfoptsmdfivefullpath','w')
-          out:write('\string\\def\string\\includetikzoptslastkey{\pdfoptsmdfivesum}')
+          out = io.open('\it@optChecksumPathToFileName','w')
+          out:write('\string\\def\string\\optLastChecksum{\it@optCurrChecksum}')
           io.close(out)
         }
       \else
         \newwrite\tempfile
-        \immediate\openout\tempfile=\pdfoptsmdfivefullpath
-        \immediate\write\tempfile{\@backslashchar def \@backslashchar includetikzoptslastkey{\pdfoptsmdfivesum}\@percentchar}
+        \immediate\openout\tempfile=\it@optChecksumPathToFileName
+        \immediate\write\tempfile{\@backslashchar def \@backslashchar optLastChecksum{\it@optCurrChecksum}\@percentchar}
         \immediate\closeout\tempfile
 
 % TODO Bug here to fix! It seems that options are modified for different
@@ -147,23 +195,27 @@
     }
 
     % Check md5file and force rebuild.
-    \IfFileExists{\pdfoptsmdfivefullpath}
+    \IfFileExists{\it@optChecksumPathToFileName}
     {% MD5 file exist.
-      \input{\pdfoptsmdfivefullpath} % load md5 opts
-      \message{old:\includetikzoptslastkey, opt:#1}
-      \message{new:\pdfoptsmdfivesum ^^J}
-      \ifnum\pdf@strcmp{\includetikzoptslastkey}{\pdfoptsmdfivesum}=0
+      \message{old:\it@optChecksumPathToFileName ^^J}
+      \input{\it@optChecksumPathToFileName} % load md5 opts
+      %************ DEBUG ******************************
+      \message{old:\optLastChecksum ^^J}
+      \message{new:\it@optCurrChecksum ^^J}
+     %*************************************************
+      \ifnum\pdf@strcmp{\optLastChecksum}{\it@optCurrChecksum}=0
         % Same MD5.
         \message{SAME MD5}
       \else
         % Different MD5, force rebuild tikz.
         \message{NOT SAME MD5}
-        \setboolean{tikzrebuild}{true}
+        \toggletrue{itRebuild}
         \storemdfive
       \fi
-      \ifthenelse{\boolean{tikzrebuild}} %use this -> ifnum tikzset bug??
+      \iftoggle{itRebuild}
       {
         \tikzset{external/force remake=true}
+        \togglefalse{itRebuild}
       }
       {}
     }
@@ -181,14 +233,16 @@
   }
 }
 
+%-------------------------------------------------------------------------------
 \newcommand\includetikzdisable
 {
-  \setboolean{includetikzdisable}{true}
+  \toggletrue{itDisable}
 }
 
+%-------------------------------------------------------------------------------
 \newcommand\includetikzorigin
 {
-  \setboolean{includetikzorigin}{true}
+  \toggletrue{itOrigin}
 }
 
 \makeatother
