@@ -55,6 +55,12 @@
   \toggletrue{itDisable}
 }
 
+%===============================================================================
+\DeclareOption{force}
+{
+  \toggletrue{itRebuild}
+}
+
 \makeatletter
 % Parameters
 \define@key{includetikz}{scale}{\tikzset{every picture/.style={scale=#1}}}
@@ -135,6 +141,68 @@
     \pdf@mdfivesum{##1}%
 }
 
+%-------------------------------------------------------------------------------
+\def\it@optChecksumSave
+{
+  \ifluatex
+  \directlua{
+    out = io.open('\it@optChecksumPathToFileName','w')
+    out:write('\string\\def\string\\optLastChecksum{\it@optCurrChecksum}')
+    io.close(out)
+  }
+  \else
+  \newwrite\tempfile
+  \immediate\openout\tempfile=\it@optChecksumPathToFileName
+  \immediate\write\tempfile{\@backslashchar def \@backslashchar optLastChecksum{\it@optCurrChecksum}\@percentchar}
+  \immediate\closeout\tempfile
+
+% TODO Bug here to fix! It seems that options are modified for different
+% pictures simultaneously, only the first picture is rebuild, because the MD5 cache is overwritten
+% too early! (first mddivewrite call, that is unexpected => newwrite bug?)
+
+%        \expandafter\newwrite\csname \countername\the\value{\countername}@\endcsname
+%        \immediate\openout\csname \countername\the\value{\countername}@\endcsname=\pdfoptsmdfivefullpath
+%        \immediate\write\csname \countername\the\value{\countername}@\endcsname{\@backslashchar def \@backslashchar includetikzoptslastkey{\pdfoptsmdfivesum}\@percentchar}
+%        \immediate\closeout\csname \countername\the\value{\countername}@\endcsname
+%        \immediate\write18{read}
+  \fi
+}
+
+
+%-------------------------------------------------------------------------------
+\def\it@rebuild
+{
+  \message{old:\it@optChecksumPathToFileName ^^J}
+  \input{\it@optChecksumPathToFileName} % load md5 opts
+      %************ DEBUG ******************************
+  \message{old:\optLastChecksum ^^J}
+  \message{new:\it@optCurrChecksum ^^J}
+     %*************************************************
+  \ifnum\pdf@strcmp{\optLastChecksum}{\it@optCurrChecksum}=0
+        % Same MD5.
+  \message{SAME MD5}
+  \else
+        % Different MD5, force rebuild tikz.
+  \message{NOT SAME MD5}
+  \toggletrue{itRebuild}
+  \it@optChecksumSave
+  \fi
+  \iftoggle{itRebuild}
+  {
+    \tikzset{external/force remake=true}
+    \togglefalse{itRebuild}
+  }
+  {}
+}
+
+%-------------------------------------------------------------------------------
+\def\it@debugInfo
+{
+  \immediate\message{--------- BEGIN DEBUG --------^^J}
+  \immediate\message{Pdf opt name \it@pdfFileName ^^J}
+  \immediate\message{Path to opt MD5 checksum:  \it@optChecksumPathToFileName^^J}
+  \immediate\message{--------- END DEBUG --------^^J}
+}
 
 %-------------------------------------------------------------------------------
 \newcommand\includetikz[2][]
@@ -158,70 +226,14 @@
     % Set figure options.
     \setkeys{includetikz}{#1}
 
-    % Force rebuild if includetikz option change.
-    % We need to create a new MD5 for includetikz options as it is not taken
-    % into account by tikz external.
-
-    % Vars
-    \immediate\message{-----------------^^J}
-    \immediate\message{Processing image \it@pdfFileName ^^J}
-    \immediate\message{Processing md5 opts \it@optChecksumFileName ^^J}
-
-    % Function to write MD5 file
-    \newcommand\storemdfive
-    {
-      \ifluatex
-        \directlua{
-          out = io.open('\it@optChecksumPathToFileName','w')
-          out:write('\string\\def\string\\optLastChecksum{\it@optCurrChecksum}')
-          io.close(out)
-        }
-      \else
-        \newwrite\tempfile
-        \immediate\openout\tempfile=\it@optChecksumPathToFileName
-        \immediate\write\tempfile{\@backslashchar def \@backslashchar optLastChecksum{\it@optCurrChecksum}\@percentchar}
-        \immediate\closeout\tempfile
-
-% TODO Bug here to fix! It seems that options are modified for different
-% pictures simultaneously, only the first picture is rebuild, because the MD5 cache is overwritten
-% too early! (first mddivewrite call, that is unexpected => newwrite bug?)
-
-%        \expandafter\newwrite\csname \countername\the\value{\countername}@\endcsname
-%        \immediate\openout\csname \countername\the\value{\countername}@\endcsname=\pdfoptsmdfivefullpath
-%        \immediate\write\csname \countername\the\value{\countername}@\endcsname{\@backslashchar def \@backslashchar includetikzoptslastkey{\pdfoptsmdfivesum}\@percentchar}
-%        \immediate\closeout\csname \countername\the\value{\countername}@\endcsname
-%        \immediate\write18{read}
-      \fi
-    }
-
     % Check md5file and force rebuild.
     \IfFileExists{\it@optChecksumPathToFileName}
     {% MD5 file exist.
-      \message{old:\it@optChecksumPathToFileName ^^J}
-      \input{\it@optChecksumPathToFileName} % load md5 opts
-      %************ DEBUG ******************************
-      \message{old:\optLastChecksum ^^J}
-      \message{new:\it@optCurrChecksum ^^J}
-     %*************************************************
-      \ifnum\pdf@strcmp{\optLastChecksum}{\it@optCurrChecksum}=0
-        % Same MD5.
-        \message{SAME MD5}
-      \else
-        % Different MD5, force rebuild tikz.
-        \message{NOT SAME MD5}
-        \toggletrue{itRebuild}
-        \storemdfive
-      \fi
-      \iftoggle{itRebuild}
-      {
-        \tikzset{external/force remake=true}
-        \togglefalse{itRebuild}
-      }
-      {}
+      \it@rebuild
     }
     {
       % MD5 file does not exist.
-      \storemdfive
+      \it@optChecksumSave
     }
 
     \tikzexternalenable
@@ -243,6 +255,12 @@
 \newcommand\includetikzorigin
 {
   \toggletrue{itOrigin}
+}
+
+%-------------------------------------------------------------------------------
+\newcommand\includetikzforcerebuild
+{
+  \toggletrue{itRebuild}
 }
 
 \makeatother
