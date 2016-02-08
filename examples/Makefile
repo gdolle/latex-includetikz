@@ -30,5 +30,6 @@ clean:
 	@rm -rf ./*.auxlock
 	@rm -rf ./*.log
 	@rm -rf ./*.pdf
+	@rm -rf ./*.md5
 	@rm -rf ./autogen
 	@rm -rf ./figs/autogen

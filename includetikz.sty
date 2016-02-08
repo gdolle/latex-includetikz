@@ -85,6 +85,18 @@
 }
 
 %-------------------------------------------------------------------------------
+\def\it@pdfFileName{%
+  \filename@base-n\arabic{\it@figCounterName}%
+}
+
+%-------------------------------------------------------------------------------
+\def\it@optChecksumFileName
+{%
+%  \def\pdfoptsmdfivefilename{
+  \it@pdfFileName-opts.md5%
+}
+
+%-------------------------------------------------------------------------------
 \def\it@stepFigCounter
 {
   % Create a counter for renaming.
@@ -118,18 +130,6 @@
   \iftoggle{itOrigin}{\filename@area/autogen/}{./autogen/}%
 }
 
-%-------------------------------------------------------------------------------
-%\newcommand\it@pdfFileName{}
-\def\it@pdfFileName{%
-  \filename@base-\jobname-n\arabic{\it@figCounterName}%
-}
-
-%-------------------------------------------------------------------------------
-\def\it@optChecksumFileName
-{%
-%  \def\pdfoptsmdfivefilename{
-  \it@pdfFileName-opts.md5%
-}
 
 %-------------------------------------------------------------------------------
 \def\it@optChecksumPathToFileName
@@ -223,14 +223,16 @@
     % Set figure options.
     \setkeys{includetikz}{#1}
 
+
     % Check md5file and force rebuild.
     \IfFileExists{\it@optChecksumPathToFileName}
     {% MD5 file exist.
       \it@rebuild{toto}
     }
     {
+    \it@debugInfo
       % MD5 file does not exist.
-      \immediate\message{Create file \it@optChecksumPathToFileName checksum : \it@optCurrChecksum ^^J}
+      \message{Create file \it@optChecksumPathToFileName checksum : \it@optCurrChecksum ^^J}
       \it@optChecksumSave
     }
 
