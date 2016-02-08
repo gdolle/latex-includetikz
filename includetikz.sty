@@ -66,12 +66,12 @@
 \makeatletter
 % Parameters
 \define@key{includetikz}{scale}{\tikzset{every picture/.style={scale=#1}}}
-\define@key{includetikz}{keepratio}[1]{\tikzset{every node/.style={transform shape}}}
 \define@key{includetikz}{width}{\tikzset{every picture/.style={width=#1}}}
 \define@key{includetikz}{height}{\tikzset{every picture/.style={height=#1}}}
 \define@key{includetikz}{fill opacity}{\tikzset{every picture/.style={fill opacity=#1}}}
 \define@key{includetikz}{font style}{\tikzset{every picture/.style={font=#1}}}
 \define@key{includetikz}{font scale}{\scalefont{#1}}
+\define@key{includetikz}{font keepratio}[1]{\tikzset{every node/.style={transform shape}}}
 \define@key{includetikz}{drawscale}{
     \pgfmathsetmacro{\fs}{2 - #1}
     \scalefont{\fs}
