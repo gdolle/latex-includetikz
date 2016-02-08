@@ -16,6 +16,10 @@ in your text source.
 Option | Description
 --- | ---
 [external] | Compute all include tikz as external pdf files with checksum (see tikz external library).
+[origin]   | Compute all pdf picture in a subdirectory "autogen" under the original figure path (Default in the source directory ).
+[force]    | Force all tikz figures to be recompiled (Slower build).
+[disable]  | Disable all pictures and replace by a black picture (Faster build).
+[optimize] | Optimize generated pdf.
 ------
 
 # Usage
