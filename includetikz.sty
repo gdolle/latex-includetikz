@@ -22,6 +22,7 @@
 \RequirePackage{xstring}
 \RequirePackage{etoolbox}
 \RequirePackage{morewrites}
+\RequirePackage{currfile-abspath}
 
 \tikzexternaldisable
 
@@ -111,16 +112,16 @@
 }
 
 %-------------------------------------------------------------------------------
-%\newcommand\it@pdfFileName{}
-\def\it@pdfFileName{%
-  \filename@base-\jobname-n\arabic{\it@figCounterName}%
-}
-
-%-------------------------------------------------------------------------------
-% Checksum MD5
+% Pdf path
 \def\it@pdfPath%
 {%
   \iftoggle{itOrigin}{\filename@area/autogen/}{./autogen/}%
+}
+
+%-------------------------------------------------------------------------------
+%\newcommand\it@pdfFileName{}
+\def\it@pdfFileName{%
+  \filename@base-\jobname-n\arabic{\it@figCounterName}%
 }
 
 %-------------------------------------------------------------------------------
@@ -137,38 +138,21 @@
 }
 
 %-------------------------------------------------------------------------------
-\def\it@optCurrChecksum
-{%
-    \pdf@mdfivesum{##1}%
-}
-
-%-------------------------------------------------------------------------------
 \def\it@optChecksumSave
 {
   \ifluatex
-  \directlua{
-    out = io.open('\it@optChecksumPathToFileName','w')
-    out:write('\string\\def\string\\optLastChecksum{\it@optCurrChecksum}')
-    io.close(out)
-  }
+    \directlua{
+      out = io.open('\it@optChecksumPathToFileName','w')
+      out:write('\string\\def\string\\optLastChecksum{\it@optCurrChecksum}')
+      io.close(out)
+    }
   \else
-  \newwrite\tempfile
-  \immediate\openout\tempfile=\it@optChecksumPathToFileName
-  \immediate\write\tempfile{\@backslashchar def \@backslashchar optLastChecksum{\it@optCurrChecksum}\@percentchar}
-  \immediate\closeout\tempfile
-
-% TODO Bug here to fix! It seems that options are modified for different
-% pictures simultaneously, only the first picture is rebuild, because the MD5 cache is overwritten
-% too early! (first mddivewrite call, that is unexpected => newwrite bug?)
-
-%        \expandafter\newwrite\csname \countername\the\value{\countername}@\endcsname
-%        \immediate\openout\csname \countername\the\value{\countername}@\endcsname=\pdfoptsmdfivefullpath
-%        \immediate\write\csname \countername\the\value{\countername}@\endcsname{\@backslashchar def \@backslashchar includetikzoptslastkey{\pdfoptsmdfivesum}\@percentchar}
-%        \immediate\closeout\csname \countername\the\value{\countername}@\endcsname
-%        \immediate\write18{read}
+    \newwrite\tempfile
+    \openout\tempfile=\it@optChecksumPathToFileName
+    \write\tempfile{\@backslashchar def \@backslashchar optLastChecksum{\it@optCurrChecksum}\@percentchar}
+    \closeout\tempfile
   \fi
 }
-
 
 %-------------------------------------------------------------------------------
 \def\it@rebuild
@@ -208,6 +192,15 @@
 %-------------------------------------------------------------------------------
 \newcommand\includetikz[2][]
 {
+  % Require -recorder option.
+  \getabspath{\jobname.aux}
+
+  %-------------------------------------------------------------------------------
+  \def\it@optCurrChecksum
+  {%
+    \pdf@mdfivesum{#1}%
+  }
+
   \iftoggle{itDisable}
   {
     \it@defaultFigure
@@ -219,6 +212,9 @@
     \it@stepFigCounter
 
     \immediate\write18{mkdir -p \it@pdfPath}
+    % If output-directory is different, this is required to avoid writing
+    % error...
+    \immediate\write18{mkdir -p \theabsdir\it@pdfPath}
 
     % Set tikz external path and filename.
     \tikzsetexternalprefix{\it@pdfPath}
@@ -230,10 +226,11 @@
     % Check md5file and force rebuild.
     \IfFileExists{\it@optChecksumPathToFileName}
     {% MD5 file exist.
-      \it@rebuild
+      \it@rebuild{toto}
     }
     {
       % MD5 file does not exist.
+      \immediate\message{Create file \it@optChecksumPathToFileName checksum : \it@optCurrChecksum ^^J}
       \it@optChecksumSave
     }
 
