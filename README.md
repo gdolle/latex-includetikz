@@ -10,9 +10,8 @@ Then add
 ```
 in your text source.
 
-##### Package options:
+#### Package options:
 
-------
 Option | Description
 --- | ---
 [external] | Compute all include tikz as external pdf files with checksum (see tikz external library).
@@ -20,7 +19,6 @@ Option | Description
 [force]    | Force all tikz figures to be recompiled (Slower build).
 [disable]  | Disable all pictures and replace by a black picture (Faster build).
 [optimize] | Optimize generated pdf.
-------
 
 # Usage
 
@@ -30,25 +28,23 @@ Create you tikz figures in a separate file then include them in your tex source 
 ```
 NB: .tikz or .tex extension work.
 
-##### Options
+#### Options
 
-------
 Option         | valuetype | Description
 ---            | ---       | ---
 [scale]        | float     | Scale the tikz image
-[keepratio]    | X         | Scale the image and inverse scale font size
+[font keepratio]    | X         | Scale the image and inverse scale font size
 [font scale]   | float     | Scale tikz image font
 [font style]   | string    | Tikz image font style (beta)
 [fill opacity] | float     | Modify image opacity (beta)
-------
 
-##### Commands:
+#### Commands:
 
 Command | Description
 --- | ---
 \includetikzdisable | Disable all pictures (to make compilation faster)
 
-##### Examples:
+#### Examples:
 
 Minimal example:
 ```
@@ -67,12 +63,7 @@ Generate monimage.tikz during first compilation, then use auto-generated pdf:
 \includetikz[font scale=1.3]{figs/monimage.tikz}
 ```
 
-##### Known bug/issues
-
-- Refresh bug: Fail to regenerate files when options are changed on several
-figures (Unresolved).
-
-##### FAQS
+#### FAQS
 
 *I get an MD5 write error `I can't write on file `figs/.md5'.*
 
