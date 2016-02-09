@@ -46,6 +46,8 @@ Option         | valuetype | Description
 Command | Description
 --- | ---
 \includetikzdisable | Disable all pictures (to make compilation faster)
+\includetikzorigin | Change autogen path to figure origin directory
+\includetikzforcerebuild | Force tikz picture to be recompiled
 
 #### Examples:
 
