@@ -5,7 +5,7 @@ Latex package to include external tikz figures and similarly to \includegraphics
 
 Add `includetikz` in your current directory, or texmf install. 
 Then add
-```
+```tex
 \usepackage[<options>]{includetikz}
 ```
 in your text source.
@@ -45,9 +45,9 @@ Option         | valuetype | Description
 
 Command | Description
 --- | ---
-\includetikzdisable | Disable all pictures (to make compilation faster)
-\includetikzorigin | Change autogen path to figure origin directory
-\includetikzforcerebuild | Force tikz picture to be recompiled
+`\includetikzdisable` | Disable all pictures (to make compilation faster)
+`\includetikzorigin` | Change autogen path to figure origin directory
+`\includetikzforcerebuild` | Force tikz picture to be recompiled
 
 #### Examples:
 
