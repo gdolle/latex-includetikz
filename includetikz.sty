@@ -21,8 +21,9 @@
 \RequirePackage{ifluatex}
 \RequirePackage{xstring}
 \RequirePackage{etoolbox}
-\RequirePackage{morewrites}
+%\RequirePackage{morewrites}
 \RequirePackage{currfile-abspath}
+\RequirePackage{newfile}
 
 \tikzexternaldisable
 
@@ -151,30 +152,31 @@
       io.close(out)
     }
   \else
-    \newwrite\tempfile
-    \openout\tempfile=\it@optChecksumPathToFileName
-    \write\tempfile{\@backslashchar def \@backslashchar optLastChecksum{\it@optCurrChecksum}\@percentchar}
-    \closeout\tempfile
+    %\message{save \it@optCurrChecksum in \it@optChecksumPathToFileName}
+    \newoutputstream{\it@pdfFileName}
+    \openoutputfile{\it@optChecksumPathToFileName}{\it@pdfFileName}
+    \addtostream{\it@pdfFileName}{\@backslashchar def \@backslashchar optLastChecksum{\it@optCurrChecksum}\@percentchar}
+    \closeoutputstream{\it@pdfFileName}
   \fi
 }
 
 %-------------------------------------------------------------------------------
 \def\it@rebuild
 {
-  \message{old:\it@optChecksumPathToFileName ^^J}
+  \message{current path:\it@optChecksumPathToFileName ^^J}
   \input{\it@optChecksumPathToFileName} % load md5 opts
       %************ DEBUG ******************************
   \message{old:\optLastChecksum ^^J}
   \message{new:\it@optCurrChecksum ^^J}
      %*************************************************
   \ifnum\pdf@strcmp{\optLastChecksum}{\it@optCurrChecksum}=0
-        % Same MD5.
-  \message{SAME MD5}
+    % Same MD5.
+    % \message{SAME MD5}
   \else
-        % Different MD5, force rebuild tikz.
-  \message{NOT SAME MD5}
-  \toggletrue{itRebuild}
-  \it@optChecksumSave
+    % Different MD5, force rebuild tikz.
+    % \message{NOT SAME MD5}
+    \toggletrue{itRebuild}
+    \it@optChecksumSave
   \fi
   \iftoggle{itRebuild}
   {
@@ -200,7 +202,7 @@
   \getabspath{\jobname.aux}
 
   %-------------------------------------------------------------------------------
-  \def\it@optCurrChecksum
+  \gdef\it@optCurrChecksum
   {%
     \pdf@mdfivesum{#1}%
   }
@@ -230,6 +232,7 @@
     % Check md5file and force rebuild.
     \IfFileExists{\it@optChecksumPathToFileName}
     {% MD5 file exist.
+      \message{MD5 checksum differs : rebuild picture \it@pdfFileName ^^J}
       \it@rebuild{toto}
     }
     {
