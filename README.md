@@ -68,11 +68,35 @@ Generate monimage.tikz during first compilation, then use auto-generated pdf:
 \includetikz[font scale=1.3]{figs/monimage.tikz}
 ```
 
+--------
+
 #### FAQS
 
-*I get an MD5 write error `I can't write on file `figs/.md5'.*
+###### *I get an MD5 write error `I can't write on file `figs/.md5'.*
 
 This often happens when you output files in another directory using the
 latex option `-output-directory=<workdir>`.
 The easier solution is to create a simlink inside the working directory.
 See the providen example.
+
+###### *I want to replace tikz picture by pdf*
+
+This is one of the goal of this package.
+Compile your latex file the first time to generate all tikz pictures.
+Then comment the includetikz lines and replace them by the `\includegraphics` function:
+```tex
+%\usepackage{includetikz}
+\usepackage{graphicx}
+
+%\includetikz[scale=0.5]{path/to/fig/figname-1}
+\includegraphics{autogen/figname-1-n0} 
+
+%\includetikz[scale=0.5]{path/to/fig/figname-1}
+\includegraphics{autogen/figname-1-n1}
+
+%\includetikz[scale=0.5]{path/to/fig/figname-2}
+\includegraphics{autogen/figname-2-n0} 
+```
+Note that all generated picture are suffixed by `-nX` where X represent the nth call of the same figure.
+(This is necessary for the case where the same picture is generated with different options)
+If the origin option is passed then the path would be `path/to/fig/autogen/` instead of `autogen/`.
