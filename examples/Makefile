@@ -1,7 +1,7 @@
 all: 1 2 3
 
 1: syml
-	lualatex --output-directory=work -recorder -shell-escape test1.tex
+	pdflatex --output-directory=work -recorder -shell-escape test1.tex
 
 2: syml
 	pdflatex --output-directory=work -recorder -shell-escape test2.tex
@@ -9,8 +9,15 @@ all: 1 2 3
 3: syml
 	pdflatex --output-directory=work -recorder -shell-escape test3.tex
 
-4:
+4: syml
+	lualatex --output-directory=work -recorder -shell-escape test3.tex
+
+5: syml
+	xelatex --output-directory=work -recorder -shell-escape test3.tex
+
+6:
 	pdflatex -recorder -shell-escape test2.tex
+
 
 dir:
 	@mkdir -p work

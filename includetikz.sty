@@ -145,19 +145,10 @@
 %-------------------------------------------------------------------------------
 \def\it@optChecksumSave
 {
-  \ifluatex
-    \directlua{
-      out = io.open('\it@optChecksumPathToFileName','w')
-      out:write('\string\\def\string\\optLastChecksum{\it@optCurrChecksum}')
-      io.close(out)
-    }
-  \else
-    %\message{save \it@optCurrChecksum in \it@optChecksumPathToFileName}
     \newoutputstream{\it@pdfFileName}
     \openoutputfile{\it@optChecksumPathToFileName}{\it@pdfFileName}
     \addtostream{\it@pdfFileName}{\@backslashchar def \@backslashchar optLastChecksum{\it@optCurrChecksum}\@percentchar}
     \closeoutputstream{\it@pdfFileName}
-  \fi
 }
 
 %-------------------------------------------------------------------------------
