@@ -49,7 +49,7 @@ Command | Description
 `\includetikzorigin` | Change autogen path to figure origin directory
 `\includetikzforcerebuild` | Force tikz picture to be recompiled
 
-#### Examples:
+# Examples:
 
 Minimal example:
 ```
@@ -68,9 +68,12 @@ Generate monimage.tikz during first compilation, then use auto-generated pdf:
 \includetikz[font scale=1.3]{figs/monimage.tikz}
 ```
 
---------
+# FAQS
 
-#### FAQS
+1. [I get an MD5 write error `I can't write on file `figs/.md5'](https://github.com/gdolle/latex-includetikz#i-get-an-md5-write-error-i-cant-write-on-filefigsmd5)
+2. [I want to replace tikz picture by pdf](https://github.com/gdolle/latex-includetikz/blob/master/README.md#i-want-to-replace-tikz-picture-by-pdf)
+
+------
 
 ###### *I get an MD5 write error `I can't write on file `figs/.md5'.*
 
@@ -78,6 +81,8 @@ This often happens when you output files in another directory using the
 latex option `-output-directory=<workdir>`.
 The easier solution is to create a simlink inside the working directory.
 See the providen example.
+
+------
 
 ###### *I want to replace tikz picture by pdf*
 
